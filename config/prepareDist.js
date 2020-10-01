@@ -74,3 +74,25 @@ entryPoints.forEach(function buildPackageJson({
     }, null, 2) + "\n",
   );
 });
+
+
+// Copy ts source files into dist to make sourcemaps great again
+const copyRecursively = (sourceFolder, destFolder, match, base = sourceFolder) => {
+  const files = fs.readdirSync(sourceFolder)
+  files.forEach(file => {
+    const filePath = path.join(sourceFolder, file)
+    const destPath = path.join(
+      destFolder,
+      filePath.slice(base.length),
+    )
+    if (fs.lstatSync(filePath).isDirectory()) {
+      if (!fs.existsSync(destPath)) {
+        fs.mkdirSync(destPath)
+      }
+      copyRecursively(filePath, destFolder, match, base)
+    } else if (file.match(match)) {
+      fs.copyFileSync(filePath, destPath)
+    }
+  })
+}
+copyRecursively('src', 'dist', /.tsx?$/)
